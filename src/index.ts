@@ -18,6 +18,13 @@ class Block {
     return CryptoJS.SHA256(index + previousHash + timestamp + data).toString();
   };
 
+  static validateStructure = (block: Block): boolean =>
+    typeof block.index === "number" &&
+    typeof block.hash === "string" &&
+    typeof block.previousHash === "string" &&
+    typeof block.timestamp === "number" &&
+    typeof block.data === "string";
+
   constructor(
     index: number,
     hash: string,
@@ -60,14 +67,43 @@ const createNewBlock = (data: string): Block => {
     newTimestamp
   );
 
-  blockchain.push(newBlock);
+  addBlock(newBlock);
   return newBlock;
 };
-createNewBlock("Hello");
+
+const getHashForBlock = (block: Block): string =>
+  Block.calculateBlockHash(
+    block.index,
+    block.previousHash,
+    block.timestamp,
+    block.data
+  );
+
+const isBlockValid = (candidateBlock: Block, previousBlock: Block): boolean => {
+  if (!Block.validateStructure(candidateBlock)) {
+    return false;
+  } else if (previousBlock.index !== candidateBlock.index - 1) {
+    return false;
+  } else if (previousBlock.hash !== candidateBlock.previousHash) {
+    return false;
+  } else if (getHashForBlock(candidateBlock) !== candidateBlock.hash) {
+    return false;
+  } else {
+    return true;
+  }
+};
+
+const addBlock = (candidateBlock: Block): void => {
+  if (isBlockValid(candidateBlock, getLatestBlock())) {
+    blockchain.push(candidateBlock);
+  }
+};
+
+createNewBlock("Second Block");
 
 const timeDifference = () => {
   setTimeout(() => {
-    createNewBlock("bye");
+    createNewBlock("Third Block");
     console.log(blockchain);
   }, 1000);
 };
